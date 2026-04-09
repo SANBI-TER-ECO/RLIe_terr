@@ -1,7 +1,32 @@
-.Rproj.user
+# Quarto output
+_site/
+docs/
+
+# Render cache
+.quarto/
+
+# R / RStudio
+.Rproj.user/
 .Rhistory
 .RData
 .Ruserdata
 
-/.quarto/
-**/*.quarto_ipynb
+# Package management (if using renv)
+renv/library/
+renv/staging/
+renv/python/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# R Markdown / knitting artifacts (if any)
+*_files/
+*_cache/
+
+# Output files you don't want to track
+*.html
