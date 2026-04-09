@@ -1,0 +1,30 @@
+project:
+  type: website
+
+website:
+  title: "Ecosystem status trends in the terrestrial realm"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: quarto/scripts/workflow.qmd
+        text: "Technical workflow"
+      - href: quarto/scripts/results.qmd
+        text: "Summary findings"
+
+execute: 
+  warning: false
+  message: false
+  #cache: true 
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+    css: styles.css
+    toc: true
+
+editor: visual
+
+# https://iucn.org/resources/conservation-tool/iucn-red-list-ecosystems

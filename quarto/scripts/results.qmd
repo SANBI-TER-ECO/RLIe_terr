@@ -1,0 +1,108 @@
+---
+title: "Red List Index of ecosystems assessments"
+subtitle: "Summary findings"
+title-block-banner: true
+
+author:
+  - name: Maphale Monyeki
+    orcid: 0000-0002-5083-7461 
+    affiliation: South African National Biodiversity Institute 
+  - name: Andrew Skowno
+    orcid: 0000-0002-2726-7886 
+    affiliation: South African National Biodiversity Institute 
+
+date: last-modified
+date-format: DD-MM-YYYY
+
+sidebar: true
+
+format:
+  html:
+    title-block-banner: true
+    title-block-banner-color: "#FFFFFF"  
+    grid:
+      margin-width: 200px
+      body-width: 1000px
+---
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+library(dplyr)
+library(RColorBrewer)
+library(ggplot2)
+```
+
+## Red List Index of Ecosystems {#red-list-index-of-ecosystems}
+
+The Red List Index of Ecosystems (RLIe) tracks changes in ecosystem threat status over time([Rowland et al., 2020](https://doi.org/10.1111/conl.12680)). The methods focus the indicator on genuine changes in status by accounting for the impact of improved data at later time points. RLIe scores range from 0 (all ecosystems collapsed) to 1 (all ecosystems classified as Least Concern), providing a clear, comparable measure of ecosystem health across time and space. RLIe was calculated for 463 terrestrial ecosystems at the biome level, across four RLE assessment periods: 2014, 2018, 2020, and 2024. The emerging trends reveal a complex picture of both resilience and vulnerability across South Africa’s biomes.
+
+The Indian Ocean Coastal Belt has experienced the steepest decline and has the lowest overall RLIe, falling from 0.50 in 2014 to 0.43 in 2024. All ecosystem types in this biome are threatened and over time they are moving into higher risk categories. This steep downward trend reflects growing pressures from land-use conversion, including the expansion of croplands, urban development, and plantations. The Fynbos Biome, renowned for its exceptional biodiversity, faced substantial historical pressures resulting in low RLIe scores (0.62) but these are reasonably stable since 2018 suggesting that the main drivers of change, particularly agricultural pressure in lowland areas, have been entrenched for many years. In the Desert, Albany Thicket and Grassland biomes there are fewer threatened ecosystems and hence slightly higher RLIe (\~0.8) but these scores have dropped substantially since 2014, suggesting accelerating pressures.
+
+At the national level, South Africa’s overall RLIe declined slightly from 0.82 to 0.79 between 2014 and 2024, signaling a slow but steady increase in ecosystem threat. The divergent trajectories seen across individual biomes highlight the importance of targeted, biome-specific conservation efforts to address the primary drivers of change shaping ecosystem threat status across the country.
+
+```{r, echo=FALSE, fig.width = 8.5, fig.height = 5, warning=FALSE, message=FALSE}
+#| label: fig-RLIe
+#| fig-cap: "Red List Index of terrestrial ecosystems at the South African biome level. In the legend, aggregate refers to the national average RLIe across all terrestrial ecosystems."
+
+RLIe <- readxl::read_xlsx(here::here("quarto", "data", "RLE index scores bootstrap.xlsx"))
+
+# ---- Constants ----
+SCALE_TEXT <- 0.6
+
+
+
+
+# ---- Data Prep ----
+biomes <- RLIe %>%
+          filter(!is.na(Biome)) %>%
+          pull(Biome) %>%
+          factor() %>%
+          droplevels() %>%
+          levels()
+
+biome_data   <- filter(RLIe, !is.na(Biome))
+overall_data <- filter(RLIe,  is.na(Biome))
+
+# ---- Color Palette ----
+biome_colors <- setNames(RColorBrewer::brewer.pal(length(biomes), "Paired"), biomes)
+
+# ---- Plot ----
+RLIe_plot <- ggplot() +
+  
+             # Biomes
+             geom_line(data = biome_data, aes(x = Year, y = RLIE,  color = Biome), size = 1.0) +
+             geom_point(data = biome_data, aes(x = Year, y = RLIE,  color = Biome), size = 4) +
+  
+             # Aggregate
+             geom_line(data = overall_data, aes(x = Year, y = RLIE, linetype = "Aggregate", shape = "Aggregate"), color = "black", size = 1.2) +
+             geom_point(data = overall_data, aes(x = Year, y = RLIE, shape = "Aggregate"), color = "black", size = 5.5) +
+
+             # ---- Scales ----
+             scale_color_manual(name   = "Biome", values = biome_colors) +
+             scale_linetype_manual(name   = "", values = c("Aggregate" = "dotted"), guide  = guide_legend(order = 2)) +
+             scale_shape_manual(name   = "", values = c("Aggregate" = 20), guide  = guide_legend(order = 2)) +
+  
+             scale_x_continuous(breaks = unique(RLIe$Year)) +
+             scale_y_continuous(limits = c(0.4, 1), breaks = seq(0.5, 1, 0.1)) +
+
+             # ---- Labels ----
+             labs(x = "Year", y = "Red List Index of ecosystems") +
+
+             # ---- Theme ----
+             theme_classic() +
+             theme(legend.position    = "right",
+                   legend.box         = "vertical",
+                   legend.text        = element_text(size = 12),
+                   legend.title       = element_text(size = 14),
+                   legend.key.size    = unit(0.6, "cm"),
+                   legend.key.height  = unit(0.8, "cm"),   # increased vertical spacing between rows
+                   legend.key.width   = unit(1.0, "cm"),
+                   legend.spacing.x   = unit(0.5, "cm"),
+                   legend.box.spacing = unit(1.0, "cm"),
+                   axis.title.x       = element_text(size = 14, margin = margin(t = 25)), # more space above x-axis title
+                   axis.title.y       = element_text(size = 14, margin = margin(r = 25)), # more space to the right of y-axis title
+                   axis.text          = element_text(size = 12))
+
+RLIe_plot
+```
+

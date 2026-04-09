@@ -1,0 +1,10 @@
+magrittr
+dplyr
+tidyr
+stringi
+rlang
+gt
+ggplot2
+RColorBrewer
+scales
+openxlsx

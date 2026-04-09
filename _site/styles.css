@@ -1,0 +1,59 @@
+/* css styles */
+
+.title {
+  font-weight: 300;
+  font-size: 23px;
+  color: gray;
+}
+
+h1{
+  font-size: 22px;
+  margin-top:17px;
+  margin-bottom:7px;
+}
+
+h2{
+  font-size: 20px;
+  margin-top:17px;
+  margin-bottom:7px;
+}
+
+h3{
+  font-size: 18px;
+  margin-top:17px;
+  margin-bottom:7px;
+}
+
+h4{
+  font-size: 16px;
+  margin-top:17px;
+  margin-bottom:7px;
+}
+
+
+html, body {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 2;
+  margin: 9px;
+  color: #444;
+}
+
+.scrolling {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+
+/* Or target all captions */
+figcaption {
+  line-height: 1.5;
+  text-align: center !important;
+  font-size: 0.85em;  /* 85% of parent font size */
+}
+
+.quarto-title-block .quarto-title-banner {
+  background-color: #A2C9B8;
+  color: #FFFFFF ;
+  padding: 40px;
+}

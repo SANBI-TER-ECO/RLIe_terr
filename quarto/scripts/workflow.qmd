@@ -1,0 +1,755 @@
+---
+title: "Red List Index of ecosystems assessments"
+subtitle: "Technical workflow"
+title-block-banner: true
+
+author:
+  - name: Maphale Monyeki
+    orcid: 0000-0002-5083-7461 
+    affiliation: South African National Biodiversity Institute 
+  - name: Andrew Skowno
+    orcid: 0000-0002-2726-7886 
+    affiliation: South African National Biodiversity Institute 
+
+date: last-modified
+date-format: DD-MM-YYYY
+
+sidebar: true
+
+format:
+  html:
+    title-block-banner: true
+    title-block-banner-color: "#FFFFFF"  
+    grid:
+      margin-width: 200px
+      body-width: 1000px
+---
+
+
+```{r setup, echo=FALSE}
+
+if (!requireNamespace(c("magrittr","dplyr", "ggplot2", "ggthemes"), quietly = TRUE)) {
+  install.packages(c("magrittr","dplyr", "ggplot2", "ggthemes"))
+}
+
+library(magrittr)
+library(dplyr)
+library(tidyr)
+library(stringi)
+library(rlang)
+library(gt)
+library(ggplot2)
+library(RColorBrewer)
+library(scales)
+library(openxlsx)
+```
+
+***Red List Index of Ecosystems overview***
+
+The Red List Index of ecosystems (RLIE) measures trends in ecosystem collapse risk. It uses the risk categories defined based on IUCN Red List of Ecosystems risk assessments (RLE) guidelines (IUCN, 2024). The concept of the RLIE is mirrored and complements the Red List Index of species, providing comparable information about ecosystems risk. It is calculated for the overall risk category assigned to each ecosystem and separately for each criterion. The IUCN RLE sub-criteria assessed at different time points (2014, 2018, and 2020) are provided on the table below:
+
+::: column-margin
+Rowland, J. A., Bland, L. M., Keith, D. A., Bignoli, D. J., Burgman, M., Etter, A., Ferrer-Paris, J. R., Miller, R. M. and Nicholson, E. (2020) *Ecosystem indices to support global biodiversity conservation*. Conservation Letters. e12680 <https://doi.org/10.1111/conl.12680>
+:::
+
+```{r, echo=FALSE}
+#| classes: plain
+#| label: tbl-Appliedcriteria
+#| tbl-cap: Sub-criteria applied for Red List of Ecosystem assessments at different assessment periods.
+#| echo: false
+
+library(dplyr)
+library(gt)
+
+
+Dataframe <- tibble(
+Year = c("2014", "2018", "2020", "2022"),
+A2b = "✓",
+A3 = "✓",
+`B1(a)i` = "✓",
+`B2(a)i` = "✓"
+)
+
+
+table1 <- Dataframe %>%
+gt() %>%
+
+# Style headers
+
+tab_style(
+style = cell_text(weight = "bold"),
+locations = cells_column_labels(columns = everything())
+) %>%
+
+
+tab_style(
+style = cell_text(weight = "bold"),
+locations = cells_body(columns = Year)
+) %>%
+
+
+tab_options(
+heading.align = 'left',
+table.width = pct(80),
+table.background.color = "#FFFFFF00",
+table.font.color = "black",
+table.font.size = px(13L),
+table.border.top.width = 4,
+data_row.padding = px(13),
+heading.title.font.size = px(12)
+) %>%
+
+cols_align(align = "center", columns = everything())
+
+table1
+
+```
+
+```{r}
+
+# Load the datasets
+data.2014 <- readxl::read_excel(here::here("quarto", "data" , "2014 RLEcore assessments_June2025.xlsx")) %>% dplyr::select(1,3,36:40,42)
+
+data.2018 <- readxl::read_excel(here::here("quarto", "data" , "2018 RLEcore assessments_June2025.xlsx")) %>% dplyr::select(1,3,36:40,42)
+
+data.2020 <- readxl::read_excel(here::here("quarto", "data" , "2020 RLEcore assessments_June2025.xlsx")) %>% dplyr::select(1,3,36:40,42)
+
+data.2024 <- read.csv(here::here("quarto", "data" , "ter_results_type_rle_epl.csv")) %>% dplyr::select(2,3,5,8,9)
+
+```
+
+***Cleaning and standardizing the imported datasets for analysis:***
+
+-   Columns were renamed for consistency (e.g., MapCode, Name), with certain ecosystem types (e.g., Mangrove Forest (FOa3), Swamp Forest (FOa2)) excluded as they are not comprehensively assessed in the terrestrial realm. The Western Lesotho Basalt Shrubland (Gd9) ecosystem is also excluded as its distribution is confined to Lesotho.
+
+-   New fields were created in each input dataset to indicate the assessment year (e.g., Year.2014, Year.2018).
+
+::: scrolling
+```{r, echo=FALSE}
+
+data.2014 <- data.2014 %>% 
+             filter (!duplicated(MapCode)) %>% 
+             filter(!(MapCode %in% c("FOa3", "FOa2", "Gd9")))  %>%
+             mutate(Year.2014 = 2014) 
+
+data.2018 <- data.2018 %>% 
+             filter (!duplicated(MapCode)) %>% 
+             filter(!(MapCode %in% c("FOa3", "FOa2", "Gd9")))  %>%
+             mutate(Year.2018 = 2018) 
+
+data.2020 <- data.2020 %>% 
+             filter (!duplicated(MapCode)) %>% 
+             filter(!(MapCode %in% c("FOa3", "FOa2", "Gd9")))  %>% 
+             mutate(Year.2020 = 2020) 
+
+data.2024 <- data.2024 %>% 
+             rename(MapCode = T_MAPCODE,
+                    Biome = T_BIOME,
+                    RLE.2024 = RLE) %>%
+             filter (!duplicated(MapCode)) %>% 
+             filter(!(MapCode %in% c("FOa3", "FOa2", "Gd9")))  %>%
+             mutate(Year.2024 = 2024) 
+
+
+```
+:::
+
+***Processing and Exporting 2014 RLE Data*** The IUCN requires that the RLIe headline indicator be applied on ecosystems experiencing genuine changes in threat status. In South Africa, we have good multi-temporal land cover data that allows for these changes to be reliably and defensibly quantified and tracked over time. To backcast the risk of ecosystem collapse exacerbated by anthropogenic changes, the following rules were applied to adjust the threat status for select ecosystem types that trigger the following conditions:
+
+-   *Retention of spatially derived threat status:* If an ecosystem type is classified as threatened under any spatial sub-criteria (i.e. A2b, A3, B1(a)i, B2(a)ii, or any combination thereof) in the 2014 assessment, and is also assessed under the 2024 core spatial assessment (i.e. a systematic spatial reassessment of all terrestrial ecosystem types), then the 2014 RLE status is retained as the final status, even if the 2024 assessment assigns a different threat category.
+-   *No change in status:* If there is no change in threat status between the 2014 and 2024 assessments, then the status remains unchanged.
+-   *Precedence of 2024 for mixed criteria outcomes:* If the threat status differs between the 2014 and 2024 assessments, and the classification is based on a combination of spatial and functional criteria, then the 2024 RLE assessment takes precedence.
+
+**Excel Workbook Creation and Formatting** -
+
+-   An Excel workbook is created with a worksheet named “Comparison.”
+-   The data is written to this worksheet.
+-   RLE-related columns are color-coded according to threat category: Critically Endangered (CR) in red, Endangered (EN) in orange, Vulnerable (VU) in yellow, and Least Concern (LC) in green. This visual coding improves readability.
+
+***Subsequent code chunks repeat this process for other assessment years (2018, 2020, and 2022), ensuring consistent formatting and comparison across time.***
+
+::: scrolling
+```{r data 2014}
+
+dat.2014 <- purrr::reduce(list(data.2014, data.2024), left_join, by = "MapCode") %>%
+                   rename(Biome = Biome.x) %>%
+                   mutate(criteria = Criteria_triggered %in% c("A3_nat", "B1i_rod", "B2i_rod", # %in% returns TRUE if there is a match else false
+                                                               "A3_nat, B1i_rod, B2i_rod", "B1i_rod, B2i_rod"),
+    
+                           RLE2014.backcast = ifelse(criteria, RLEcore.2014, RLE.2024),
+    
+                           comments.2014 = case_when(is.na(Criteria_triggered) | Criteria_triggered == "" ~ "",
+                                                     RLE.2024 == RLEcore.2014 & criteria ~ "status unchanged (2014 and 2024 assessment periods)",
+                                                     RLE.2024 != RLEcore.2014 & criteria ~ "retained 2014 status",
+                                                     !criteria                           ~ "retained 2024 status"))%>%
+              dplyr::select(1,2,11,9,3:7,16,13,17) 
+  
+# text coloring
+wb <- createWorkbook()
+addWorksheet(wb, "Comparison")
+writeData(wb, "Comparison", dat.2014)
+
+# Define color mapping and RLE-related columns
+color_map <- c(CR = "red", EN = "orange", VU = "yellow", LC = "#B4D79E")
+rle_cols <- c("RLEcore.2014", "RLE.2024", "RLE2014.backcast")
+
+# Apply coloring to relevant columns
+for (col_name in rle_cols) {
+  col_idx <- which(names(dat.2014) == col_name)
+  vals <- dat.2014[[col_name]]
+
+  for (row in seq_along(vals)) {
+    val <- vals[row]
+    matched_code <- names(color_map)[sapply(names(color_map), \(code) grepl(code, val, ignore.case = TRUE))]
+    if (length(matched_code) == 1) {
+      style <- createStyle(fgFill = color_map[[matched_code]])
+      addStyle(wb, "Comparison", style, rows = row + 1, cols = col_idx)
+    }
+  }
+}
+# Save the Excel file
+saveWorkbook(wb,here::here("quarto", "data", "RLE 2014.xlsx"),overwrite = TRUE)
+
+```
+
+```{r data 2018}
+
+dat.2018 <- purrr::reduce(list(data.2018, data.2024), left_join, by = "MapCode") %>%
+                   rename(Biome = Biome.x) %>%
+                   mutate(criteria = Criteria_triggered %in% c("A3_nat", "B1i_rod", "B2i_rod", # %in% returns TRUE if there is a match else false
+                                                               "A3_nat, B1i_rod, B2i_rod", "B1i_rod, B2i_rod"),
+    
+                           RLE2018.backcast = ifelse(criteria, RLEcore.2018, RLE.2024),
+    
+                           comments.2018 = case_when(is.na(Criteria_triggered) | Criteria_triggered == "" ~ "",
+                                                     RLE.2024 == RLEcore.2018 & criteria          ~ "status unchanged (2018 and 2024 assessment periods)",
+                                                     RLE.2024 != RLEcore.2018 & criteria          ~ "retained 2018 status",
+                                                     !criteria                                    ~ "retained 2024 status")) %>%
+              dplyr::select(1,2,11,9,3:7,16,13,17) 
+
+
+
+# text coloring
+wb <- createWorkbook()
+addWorksheet(wb, "Comparison")
+writeData(wb, "Comparison", dat.2018)
+
+# Define color mapping and RLE-related columns
+color_map <- c(CR = "red", EN = "orange", VU = "yellow", LC = "#B4D79E")
+rle_cols <- c("RLEcore.2018", "RLE.2024", "RLE2018.backcast")
+
+# Apply coloring to relevant columns
+for (col_name in rle_cols) {
+  col_idx <- which(names(dat.2018) == col_name)
+  vals <- dat.2018[[col_name]]
+
+  for (row in seq_along(vals)) {
+    val <- vals[row]
+    matched_code <- names(color_map)[sapply(names(color_map), \(code) grepl(code, val, ignore.case = TRUE))]
+    if (length(matched_code) == 1) {
+      style <- createStyle(fgFill = color_map[[matched_code]])
+      addStyle(wb, "Comparison", style, rows = row + 1, cols = col_idx)
+    }
+  }
+}
+# Save the Excel file
+saveWorkbook(wb,here::here("quarto", "data", "RLE 2018.xlsx"),overwrite = TRUE)
+
+```
+
+```{r data 2020}
+
+dat.2020 <- purrr::reduce(list(data.2020, data.2024), left_join, by = "MapCode") %>%
+                   rename(Biome = Biome.x) %>%
+                   mutate(B1i.2020 = case_when(MapCode == "Gm16" ~ "EN", TRUE ~ B1i.2020), # correcting misclassification
+                          RLEcore.2020 = case_when(MapCode == "Gm16" ~ "EN", TRUE ~ RLEcore.2020)) %>% # update the overall listing field
+  
+                   mutate(criteria = Criteria_triggered %in% c("A3_nat", "B1i_rod", "B2i_rod", # %in% returns TRUE if there is a match else false
+                                                               "A3_nat, B1i_rod, B2i_rod", "B1i_rod, B2i_rod"),
+    
+                           RLE2020.backcast = ifelse(criteria, RLEcore.2020, RLE.2024),
+    
+                           comments.2020 = case_when(is.na(Criteria_triggered) | Criteria_triggered == "" ~ "",
+                                                     RLE.2024 == RLEcore.2020 & criteria ~ "status unchanged (2020 and 2024 assessment periods)",
+                                                     RLE.2024 != RLEcore.2020 & criteria ~ "retained 2020 status",
+                                                     !criteria                           ~ "retained 2024 status")) %>%
+              dplyr::select(1,2,11,9,3:7,16,13,17) 
+
+
+
+# text coloring
+wb <- createWorkbook()
+addWorksheet(wb, "Comparison")
+writeData(wb, "Comparison", dat.2020)
+
+# Define color mapping and RLE-related columns
+color_map <- c(CR = "red", EN = "orange", VU = "yellow", LC = "#B4D79E")
+rle_cols <- c("RLEcore.2020", "RLE.2024", "RLE2020.backcast")
+
+# Apply coloring to relevant columns
+for (col_name in rle_cols) {
+  col_idx <- which(names(dat.2020) == col_name)
+  vals <- dat.2020[[col_name]]
+
+  for (row in seq_along(vals)) {
+    val <- vals[row]
+    matched_code <- names(color_map)[sapply(names(color_map), \(code) grepl(code, val, ignore.case = TRUE))]
+    if (length(matched_code) == 1) {
+      style <- createStyle(fgFill = color_map[[matched_code]])
+      addStyle(wb, "Comparison", style, rows = row + 1, cols = col_idx)
+    }
+  }
+}
+
+# Save the Excel file
+saveWorkbook(wb,here::here("quarto", "data", "RLE 2020.xlsx"),overwrite = TRUE)
+
+```
+:::
+
+Combine the multiple ecosystem assessment into a single, integrated dataset
+
+```{r}
+
+data <- purrr::reduce(list(dat.2014, dat.2018, dat.2020, data.2024), left_join, by = "MapCode") %>%
+        dplyr::select(1:10,12,15:21,23,26:32,34,39,37)%>%
+        dplyr::rename_with(~ gsub("\\.x(\\.x)*$|\\.y(\\.y)*$", "", .x))      
+
+# text coloring
+wb <- createWorkbook()
+addWorksheet(wb, "Comparison")
+writeData(wb, "Comparison", data)
+
+# Define color mapping and RLE-related columns
+color_map <- c(CR = "red", EN = "orange", VU = "yellow", LC = "#B4D79E")
+rle_cols <- c("RLE2014.backcast", "RLE2018.backcast", "RLE2020.backcast", "RLE.2024")
+
+# Apply coloring to relevant columns
+for (col_name in rle_cols) {
+  col_idx <- which(names(data) == col_name)
+  vals <- data[[col_name]]
+
+  for (row in seq_along(vals)) {
+    val <- vals[row]
+    matched_code <- names(color_map)[sapply(names(color_map), \(code) grepl(code, val, ignore.case = TRUE))]
+    if (length(matched_code) == 1) {
+      style <- createStyle(fgFill = color_map[[matched_code]])
+      addStyle(wb, "Comparison", style, rows = row + 1, cols = col_idx)
+    }
+  }
+}
+
+# Save the Excel file
+saveWorkbook(wb,here::here("quarto", "data", "RLE index 2024.xlsx"),overwrite = TRUE)
+```
+
+***Defining and Ranking Red List of Ecosystems Categories***
+
+This code chunk sets up the core functions used to rank ecosystem threat categories and identify the highest-risk category across multiple sub-criteria:
+
+1.  **danger** Function:
+
+-   Assigns an ordinal rank to each Red List of Ecosystems (RLE) category, ordered from lowest to highest risk: NE (Not Evaluated), DD (Data Deficient), LC (Least Concern), NT (Near Threatened), VU (Vulnerable), EN (Endangered), CR (Critically Endangered), and CO (Collapsed).
+-   For a given category, the function returns a numeric position representing its relative risk. This allows easy comparison between categories for later calculations.
+
+2.  **maxcategory** Function:
+
+-   Uses the ranks defined by danger function to identify the highest risk category among a vector of sub-criteria for a given ecosystem.
+-   It iterates through each sub-criteria value, compares the danger scores, and retains the category with the highest score.
+-   Returns a vector with the highest-risk category and its position in the input vector, enabling subsequent selection or weighting in index calculations.
+
+***Purpose: These functions are foundational for calculating the Red List Index of Ecosystems (RLIe), ensuring that risk categories can be compared numerically and that the most severe threat across multiple criteria is correctly identified.***
+
+::: scrolling
+```{r Define category ranks}
+#| echo: false
+
+# The function *danger* orders the Red List of Ecosystems risk categories from lowest to highest risk
+
+danger <- function(x){
+ 
+  # Set up
+  position = 1
+  
+  # Define order of risk categories
+  dangerzone <- c("NE", "DD", "LC", "NT", "VU", "EN", "CR", "CO")
+  
+  # Order risk categories
+  # It goes through each item in dangerzone one by one. i is the position number for each item. If the input x equals the current item, it    updates position to that number. Then, after checking all items, it returns position.”
+  for(i in 1:length(dangerzone)){ 
+    if(x == dangerzone[i]) {
+      position = i
+    }
+  }
+    return(position)
+}
+
+# The function *maxcategory* uses the category ranks defined by the function *danger*. If the risk categories for each sub-criteria are listed in separate columns, the function *maxcategory* selects the highest risk category across the columns (i.e. subcritera) for each criteria.
+
+maxcategory <- function (x) {
+  
+  # Set up
+  value = 0 # will store the highest "danger" score found so far.
+  position = 0 # will store the position (index) in the vector where the highest danger score is found.
+  highestvalue = NULL # will store the actual category with the highest danger
+  
+  # Define highest risk category across columns
+  for(i in 1:length(x)){ # Starts a loop that goes through each item in the vector x, using i as the index from 1 to the length of x
+    if (danger(x[i]) > value){ # Checks if the danger score of the current item (x[i]) is greater than the highest score found so far (value)
+    value = danger(x[i]) # Updates value to the new highest danger score.
+    position = i # Updates position to the current index i where the highest danger was found.
+    highestvalue = x[i]# Stores the category name corresponding to the highest danger score.
+    }
+  }
+  
+  # Return highest risk category across columns
+  category_list <- c(highestvalue, position) # Creates a vector category_list containing two elements: the highest risk category & its position in the input vector 
+  return(category_list) #  this vector as the output of the function 
+}
+
+```
+:::
+
+***Calculation of the index*** 
+
+These ordinal ranks are used to calculate the Red List Index for Ecosystems (RLIE) and the RLIE ranges from zero (all ecosystems Collapsed) to one (all Least Concern).
+
+:::: column-margin
+::: {#eq-rlie .equation}
+$$
+RLIE_t = 1- \frac{\sum_{i = 1}^{n} W_{C_{i,j}}}{W_{{CO}^n}}
+$$
+:::
+
+Where $W_{C_{i,j}}$ represents the risk category rank for ecosystem $i$ in year $t$, with the following values:
+
+-   Collapsed = 5
+
+-   Critically Endangered = 4
+
+-   Endangered = 3
+
+-   Vulnerable = 2
+
+-   Near Threatened = 1
+
+-   Least Concern = 0
+::::
+
+::: scrolling
+```{r calcWeights}
+
+df.2014 <- dat.2014 %>%
+           dplyr::select(1:4,10) %>%
+           rename("Overall" = "RLE2014.backcast",
+                  "Year" = "Year.2014")
+
+df.2018 <- dat.2018 %>%
+           dplyr::select(1:4,10) %>%
+           rename("Overall" = "RLE2018.backcast",
+                  "Year" = "Year.2018")
+
+df.2020 <- dat.2020 %>%
+           dplyr::select(1:4,10) %>%
+           rename("Overall" = "RLE2020.backcast",
+                  "Year" = "Year.2020")
+
+df.2024 <- data.2024 %>%  
+           dplyr::select(1:3,6,4) %>%
+           rename("Overall" = "RLE.2024",
+                  "Year" = "Year.2024")
+
+combined.df <- bind_rows(df.2014, df.2018, df.2020, df.2024) 
+
+```
+:::
+
+## STEP 1: Define a function to rank IUCN categories
+
+This function assigns an ordinal ranking to each IUCN Red List category, which helps track how severe the ecosystem risk is. It's not used in later calculations but can help inspect the order of categories.
+
+```{r}
+danger <- function(x) {
+  dangerzone <- c("NE", "DD", "LC", "NT", "VU", "EN", "CR", "CO")
+  match(x, dangerzone, nomatch = 1)
+}
+```
+
+## STEP 2: Assign numeric weights to RLE categories
+
+This function is used in the core calculation. Each IUCN Red List category is mapped to a numeric score from 0 (Least Concern) to 5 (Collapsed). These weights are used to calculate the Red List Index of Ecosystems (RLIE).
+
+```{r}
+
+# Assign ordinal weights to IUCN RLE categories for calculation
+calcWeights <- function(df, RLE_criteria) {
+  
+  # Filter out rows with missing values in the selected RLE column
+  df <- filter(df, !is.na(df[[RLE_criteria]]))
+
+  # Map each RLE category to its corresponding weight
+  df <- mutate(df,
+    category_weights = dplyr::case_match(.x = .data[[RLE_criteria]],
+                                               "CO" ~ 5,   
+                                               "CR" ~ 4,   
+                                               "EN" ~ 3,   
+                                               "VU" ~ 2,   
+                                               "NT" ~ 1,   
+                                               "LC" ~ 0, .default = NA_real_))  # All others (e.g. NE, DD) become NA
+
+  # Return dataframe with assigned weights
+  return(df)
+}
+
+```
+
+## STEP 3: Bootstrap the RLIE to estimate confidence bounds
+
+This function resamples the category weights many times (with replacement) to create a distribution of RLIE scores. From that, it calculates the 95% confidence interval, helping to quantify uncertainty in the RLIE estimates.
+
+```{r}
+
+# Define a function to bootstrap RLIE scores and calculate confidence intervals
+bootstrap_rlie <- function(weights, n_boot = 1000) {
+  
+  # Generate bootstrap samples and compute RLIE for each
+  boot_scores <- replicate(n_boot, {
+    
+    # Sample the weights with replacement (same size as original)
+    sampled <- sample(weights, size = length(weights), replace = TRUE)
+    
+    # Calculate RLIE: 1 - (sum of weights / maximum possible score)
+    1 - (sum(sampled, na.rm = TRUE) / (length(sampled) * 5))
+  })
+  
+  # Return 95% confidence interval (2.5th and 97.5th percentiles)
+  quantile(boot_scores, probs = c(0.025, 0.975), na.rm = TRUE)
+}
+
+
+```
+
+## STEP 4: Calculate Red List Index of Ecosystems (RLIE) with bootstrap uncertainty
+
+This function calculates the RLIE for ecosystems using weighted IUCN categories. It supports grouping by biome and/or year, and includes uncertainty estimation using bootstrap confidence intervals.
+
+```{r}
+
+calcRLIE <- function(eco_data, RLE_criteria, group1 = NULL, group2 = NULL, n_boot = 5000) {
+  
+  # Step 1: Remove "Not Evaluated" and "Data Deficient" ecosystems
+  data <- dplyr::filter(eco_data, 
+                        !.data[[RLE_criteria]] %in% c("NE", "DD"))
+
+  # Step 2: Assign ordinal weights based on risk category (CO = 5, LC = 0)
+  data <- calcWeights(data, RLE_criteria)
+  data <- tidyr::drop_na(data, category_weights)
+
+  # Step 3: Ensure no missing values in grouping variables
+  if (!is.null(group1)) {
+    data <- tidyr::drop_na(data, !!rlang::sym(group1))
+  }
+  if (!is.null(group2)) {
+    data <- tidyr::drop_na(data, !!rlang::sym(group2))
+  }
+
+  # Step 4: Group the data by biome, year, or both
+  grouped <- if (!is.null(group1) && !is.null(group2)) {
+    dplyr::group_by(data, group1 = .data[[group1]], group2 = .data[[group2]])
+  } else if (!is.null(group1)) {
+    dplyr::group_by(data, group1 = .data[[group1]])
+  } else if (!is.null(group2)) {
+    dplyr::group_by(data, group2 = .data[[group2]])
+  } else {
+    dplyr::mutate(data, dummy_group = "all") %>% dplyr::group_by(dummy_group)
+  }
+
+  # Step 5: Calculate total weights, counts, and RLIE
+  result <- dplyr::summarise(grouped,
+    total_weight = sum(category_weights, na.rm = TRUE),
+    total_count = dplyr::n(),
+    RLIE = 1 - (total_weight / (total_count * 5)),  # RLIE formula
+    weights_list = list(category_weights),          # Store weights for bootstrapping
+    .groups = "drop"
+  )
+
+  # Step 6: Apply bootstrap to each group to estimate 95% confidence intervals
+  bounds <- purrr::map(result$weights_list, ~ bootstrap_rlie(.x, n_boot = n_boot))
+  bounds_df <- do.call(rbind, bounds)
+
+  #  Step 7: Add lower and upper bounds to the result
+  result$lower <- bounds_df[, 1]
+  result$upper <- bounds_df[, 2]
+  result$criteria <- RLE_criteria
+  result$weights_list <- NULL  # Remove unnecessary column
+
+  return(result)
+}
+
+```
+
+## STEP 5: Compute RLIE scores and export results
+
+The RLIE is computed both at the biome level, producing a summary of ecosystem risk trends over time. Finally, all results, including biome-level and national RLIE scores with confidence bounds, are exported to Excel and displayed in a formatted summary table, providing a comprehensive, visual, and quantitative assessment of ecosystem status and trends across South Africa.
+
+```{r}
+
+# Step 1: Combine ecosystem assessment data from all years into a single dataframe
+combined.df <- bind_rows(df.2014, df.2018, df.2020, df.2024)
+
+# Step 2: Count number of ecosystems per Biome-Year combination (optional, for validation)
+count <- combined.df %>%
+         group_by(Biome, Year) %>%
+         summarise(n = n()) 
+# Uncomment below to inspect full counts
+# print(count, n = Inf)
+
+# Step 3: Calculate RLIE scores and bootstrap CIs per Biome and Year
+RLIe.4points <- calcRLIE(combined.df, 
+                         RLE_criteria = "Overall", 
+                         group1 = "Biome", 
+                         group2 = "Year")
+
+# Step 4: Calculate national-level RLIE scores and uncertainty per Year
+RLIe.overall <- calcRLIE(combined.df,
+                         RLE_criteria = "Overall",
+                         group2 = "Year")
+
+# Step 5: Combine biome-level and national-level results into one table
+RLIe.all <- dplyr::bind_rows(RLIe.4points, RLIe.overall) %>%
+            rename(Biome = group1, 
+                   Year = group2)
+
+# Step 6: Export final RLIE results to Excel (including bootstrap confidence bounds)
+writexl::write_xlsx(RLIe.all, here::here("quarto", "data", "RLE index scores bootstrap.xlsx"))
+```
+
+
+::: scrolling
+```{r}
+#| classes: plain
+#| echo: false
+#| label: tbl-RLIes
+#| tbl-cap: Summay table of the RLIe at biome level for 2014, 2018, 2020, and 2022
+
+gt(RLIe.all) %>%
+
+   cols_label(Biome = "Biome",
+              Year = "Year",
+              total_weight = "Total weight",
+              total_count = "Total count",
+              RLIE = "RLIe",
+              lower = "Lower bound",
+              upper = "Upper bound",
+              criteria = "Criteria") %>%
+
+   tab_options(heading.align = 'left',
+               table.width = pct(80),
+               table.background.color = "#FFFFFF00", 
+               table.font.color = "black",
+               table.font.size = px(13L),
+               table.border.top.width = 4,
+               data_row.padding = px(13), 
+               heading.title.font.size = px(12)) %>%
+  
+   cols_align(align = "center", 
+              columns = where(is.character)) %>%
+
+   cols_align(align = "left", 
+              columns = "Biome") %>%    
+  
+   cols_align(align = "center", 
+              columns = where(is.numeric))
+
+```
+:::
+
+
+```{r, echo=FALSE}
+
+# ---- Constants ----
+SCALE_TEXT <- 0.6
+
+# ---- Data Prep ----
+biomes <- RLIe.all %>%
+          filter(!is.na(Biome)) %>%
+          pull(Biome) %>%
+          factor() %>%
+          droplevels() %>%
+          levels()
+
+biome_data   <- filter(RLIe.all, !is.na(Biome))
+overall_data <- filter(RLIe.all,  is.na(Biome))
+
+# ---- Color Palette ----
+biome_colors <- setNames(brewer.pal(length(biomes), "Paired"), biomes)
+
+# ---- Plot ----
+RLIe_plot <- ggplot() +
+  
+             # Biomes
+             geom_line(data = biome_data, aes(x = Year, 
+                                              y = RLIE, 
+                                              color = Biome), 
+                                              size = 0.35) +
+  
+             geom_point(data = biome_data, aes(x = Year, 
+                                               y = RLIE, 
+                                               color = Biome), 
+                                               size = 2) +
+  
+             # Aggregate
+             geom_line(data = overall_data, aes(x = Year, 
+                                                y = RLIE, 
+                                                linetype = "Aggregate", 
+                                                shape = "Aggregate"),
+                                                color = "black", 
+                                                size = 0.35) +
+  
+             geom_point(data = overall_data, aes(x = Year, 
+                                                 y = RLIE, 
+                                                 shape = "Aggregate"),
+                                                 color = "black", 
+                                                 size = 2) +
+
+            # ---- Scales ----
+            scale_color_manual(name   = "Biome",
+                               values = biome_colors) +
+  
+            scale_linetype_manual(name   = "",
+                                  values = c("Aggregate" = "dotted"),
+                                  guide  = guide_legend(order = 2)) +
+  
+            scale_shape_manual(name   = "",
+                               values = c("Aggregate" = 20),
+                               guide  = guide_legend(order = 2)) +
+  
+            scale_x_continuous(breaks = unique(RLIe.all$Year)) +
+            scale_y_continuous(limits = c(0.4, 1),
+                               breaks = seq(0.5, 1, 0.1)) +
+
+            # ---- Labels ----
+            labs(x = "Year",
+                 y = "Red List Index of ecosystems") +
+
+           # ---- Theme ----
+           theme_classic() +
+           theme(legend.position   = "right",
+                 legend.box        = "vertical",
+                 legend.text       = element_text(size = 14 * SCALE_TEXT),
+                 legend.title      = element_text(size = 16 * SCALE_TEXT),
+                 legend.spacing.y  = unit(0.1, 'cm'),
+                 legend.key.size   = unit(0.5, "cm"),
+                 legend.key.height = unit(0.8, "cm"),   # spacing between keys (vertical)
+                 axis.title.x      = element_text(size = 16 * SCALE_TEXT, margin = margin(t = 12)),
+                 axis.title.y      = element_text(size = 16 * SCALE_TEXT, margin = margin(r = 12)),
+                 axis.text         = element_text(size = 14 * SCALE_TEXT))
+
+#print(RLIe_plot)
+
+ggsave(here::here("quarto", "imgs", "RLIe_plot.png"),
+             plot = RLIe_plot,
+             width = 7,
+             height = 5,
+             dpi = 350)
+```
