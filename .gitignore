@@ -30,3 +30,5 @@ Thumbs.db
 
 # Output files you don't want to track
 *.html
+/.quarto/
+**/*.quarto_ipynb
