@@ -1,8 +1,6 @@
 project:
   type: website
   
-output-dir: docs 
-
 website:
   title: "Ecosystem status trends in the terrestrial realm"
   navbar:

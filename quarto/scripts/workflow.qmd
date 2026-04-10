@@ -25,7 +25,6 @@ format:
       body-width: 1000px
 ---
 
-
 ```{r setup, echo=FALSE}
 
 if (!requireNamespace(c("magrittr","dplyr", "ggplot2", "ggthemes"), quietly = TRUE)) {
@@ -410,7 +409,7 @@ maxcategory <- function (x) {
 ```
 :::
 
-***Calculation of the index*** 
+***Calculation of the index***
 
 These ordinal ranks are used to calculate the Red List Index for Ecosystems (RLIE) and the RLIE ranges from zero (all ecosystems Collapsed) to one (all Least Concern).
 
@@ -434,6 +433,9 @@ Where $W_{C_{i,j}}$ represents the risk category rank for ecosystem $i$ in year 
 -   Near Threatened = 1
 
 -   Least Concern = 0
+
+$W_{CO}$ is the maximum category rank (Collapsed=5), and $n$ is the total number of ecosystem types excluding Data Deficient or Not Evaluated ecosystem types.
+
 ::::
 
 ::: scrolling
@@ -590,7 +592,7 @@ calcRLIE <- function(eco_data, RLE_criteria, group1 = NULL, group2 = NULL, n_boo
 
 ## STEP 5: Compute RLIE scores and export results
 
-The RLIE is computed both at the biome level, producing a summary of ecosystem risk trends over time. Finally, all results, including biome-level and national RLIE scores with confidence bounds, are exported to Excel and displayed in a formatted summary table, providing a comprehensive, visual, and quantitative assessment of ecosystem status and trends across South Africa.
+The RLIe is computed both at the biome level, producing a summary of ecosystem risk trends over time. Finally, all results, including biome-level and national RLIE scores with confidence bounds, are exported to Excel and displayed in a formatted summary table, providing a comprehensive, visual, and quantitative assessment of ecosystem status and trends across South Africa.
 
 ```{r}
 
@@ -623,7 +625,6 @@ RLIe.all <- dplyr::bind_rows(RLIe.4points, RLIe.overall) %>%
 # Step 6: Export final RLIE results to Excel (including bootstrap confidence bounds)
 writexl::write_xlsx(RLIe.all, here::here("quarto", "data", "RLE index scores bootstrap.xlsx"))
 ```
-
 
 ::: scrolling
 ```{r}
@@ -663,7 +664,6 @@ gt(RLIe.all) %>%
 
 ```
 :::
-
 
 ```{r, echo=FALSE}
 

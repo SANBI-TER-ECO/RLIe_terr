@@ -8,7 +8,7 @@ sidebar: false
 about: 
   id: hero-heading
   template: trestles
-  image: quarto/imgs/GET.png
+  image: quarto/imgs/GBF.png
   links:
     - icon: github
       href: https://github.com/SANBI-TER-ECO
@@ -31,9 +31,8 @@ format:
 ---
 
 ::: {#hero-heading}
-During the development of the United Nations Sustainable Development Goals (SDGs), a global call was made for biodiversity conservation and management interventions to be informed by comprehensive ecosystem assessments. In response to this mandate, several ecosystem headline indicators were developed, including the Red List of Ecosystems (RLE) and the Red List Index of Ecosystems (RLIe), which have since been adopted as key pillars of the Post-2020 Global Biodiversity Framework of the Convention on Biological Diversity (CBD).
+During the development of the United Nations Sustainable Development Goals (SDGs), a global call was made for biodiversity conservation and management interventions to be informed by comprehensive ecosystem assessments. In response to this mandate, several ecosystem headline indicators were developed, including the Red List of Ecosystems (RLE) and the Red List Index of Ecosystems (RLIe). These indicators, designed to assess and monitor the status and trends of ecosystems at national and global scales, have since been adopted as key pillars of the Post-2020 Global Biodiversity Framework of the Convention on Biological Diversity (CBD). 
 :::
 
-The implementation of this global mandate relies on a standardised, spatially explicit framework underpinned by consistent ecosystem typologies and terminology, enabling comparable assessment, reporting, and tracking of ecosystem status across spatial scales. To meet these requirements, the IUCN Commission on Ecosystem Management developed the Global Ecosystem Typology (GET) as a unifying classification system for national and global ecosystem reporting.
+Their integration into the Kunming-Montreal Global Biodiversity Framework (GBF), adopted in 2022, further reinforced this commitment, with the framework setting ambitious targets, including halting and reversing ecosystem degradation, restoring 30% of degraded ecosystems, and protecting 30% of land and ocean areas by 2030, positioning these indicators as central tools for tracking progress toward global biodiversity goals.
 
-South Africa, as a signatory to the Convention on Biological Diversity, is among the first countries to crosswalk its national ecosystem classification to the IUCN Global Ecosystem Typology. South Africa’s ecosystems are nested within higher-level functional units of the GET, specifically Level 2 (functional biomes) and Level 3 (ecosystem functional groups), which were used as the reporting and analytical units for the application of the Red List Index of Ecosystems indicator.
