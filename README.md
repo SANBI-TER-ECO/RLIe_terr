@@ -33,17 +33,12 @@ To backcast the risk of ecosystem collapse attributable to anthropogenic change,
 
 -   **2024 takes precedence for mixed-criteria outcomes** — If the threat status differs between assessments and classification is based on a combination of spatial and functional criteria, the 2024 RLE assessment takes precedence.
 
-::: {.callout-note icon= true}
+> ## Note
+>
+> - The backcasting process described above was also applied to the 2018 and 2020 assessment periods.  
+> - For the 2022 land cover dataset, assessments were conducted in 2024; the assessment period is therefore referred to as 2024 throughout this workflow.  
+> - The functions used to compute the RLIe scores were sourced from the [`rle_indices`](https://github.com/red-list-ecosystem/rle_indices) repository and adapted to calculate RLIe scores and their associated uncertainty across the four assessment periods (2014, 2018, 2020, and 2024) at the biome level.
 
-## Important
-
--  The backcasting process described above was also applied to the 2018 and 2020 assessment periods. 
--  For the 2022 land cover dataset, assessments were conducted in 2024; the assessment period is therefore referred to as 2024 assessment throughout this workflow.
-
--  The functions used to compute the RLIe scores were sourced from this[`rle_indices` repository](https://github.com/red-list-ecosystem/rle_indices) and adapted to calculate RLIe scores and their associated uncertainty 
-across the four assessment periods (2014, 2018, 2020, and 2024) at the biome level.
-
-:::
 
 **Calculation of the Index**
 
@@ -51,11 +46,10 @@ The RLIe enables the calculation of scores for ecosystem types across multiple l
 
 The RLIe is expressed by this mathematical equation:
 
-::: {#eq-rlie .equation}
 $$
-RLIE_t = 1- \frac{\sum_{i = 1}^{n} W_{C_{i,j}}}{W_{{CO}^n}}
+RLIe = 1- \frac{\sum_{i = 1}^{n} W_{C_{i,j}}}{W_{{CO}^n}}
 $$
-:::
+
 
 Where $W_{C_{i,j}}$ represents the risk category rank for ecosystem $i$ in year $t$, with the following values:
 
@@ -71,5 +65,6 @@ Where $W_{C_{i,j}}$ represents the risk category rank for ecosystem $i$ in year 
 
 -   Least Concern = 0
 
+$W_{CO}$ is the maximum category rank (Collapsed=5), and $n$ is the total number of ecosystem types excluding Data Deficient or Not Evaluated ecosystem types.
 
-
+**The technical workflow and summary results are published as a website and are accessible [here](https://sanbi-ter-eco.github.io/RLIe_terr/).**
