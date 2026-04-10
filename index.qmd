@@ -19,7 +19,7 @@ about:
     - icon: globe
       href: https://biodiversityadvisor.sanbi.org/contentmanagement/index?guid=e7c11960-bb9b-4bac-a736-6c6db0e01b42
     - icon: envelope
-      href: "mailto:m.monyeki@sanbi.org.za; c.poole@sanbi.org.za"
+      href: "mailto:m.monyeki@sanbi.org.za"
 
 format:
   html:
