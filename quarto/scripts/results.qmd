@@ -49,9 +49,6 @@ RLIe <- readxl::read_xlsx(here::here("quarto", "data", "RLE index scores bootstr
 # ---- Constants ----
 SCALE_TEXT <- 0.6
 
-
-
-
 # ---- Data Prep ----
 biomes <- RLIe %>%
           filter(!is.na(Biome)) %>%

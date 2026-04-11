@@ -339,7 +339,7 @@ for (col_name in rle_cols) {
 }
 
 # Save the Excel file
-saveWorkbook(wb,here::here("quarto", "data", "RLE index 2024.xlsx"),overwrite = TRUE)
+saveWorkbook(wb,here::here("quarto", "data", "consolidated RLE assessments.xlsx"),overwrite = TRUE)
 ```
 
 ***Defining and Ranking Red List of Ecosystems Categories***
