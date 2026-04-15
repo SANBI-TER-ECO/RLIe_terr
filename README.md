@@ -17,7 +17,7 @@ The workflow integrates RLE assessment outcomes derived from multi-temporal land
 | Data | year | Description |
 |--------------------|---------------------|------------------------------------------|
 | National vegetation map | 2024 | The vegetation map is a model of the historical extent of the vegetation types prior to the year 1750 |
-| National land cover | 2014, 2018, 2020 and 2022 | National Land Cover dataset maps land use and land cover classes |
+| National land cover | 2014, 2018, 2020 and 2022 | National Land Cover dataset comprising classified raster pixels representing broad land cover classes, used to derive spatially explicit estimates of ecosystem extent and temporal change for RLE assessments |
 
 **Scope of the 2025 assessment**
 
